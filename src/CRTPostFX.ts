@@ -1,15 +1,15 @@
 import Phaser from "phaser";
 
 export interface CRTPipelineOptions {
-  curvature?: number;          // 0.0 - 0.4
-  scanlineIntensity?: number;  // 0.0 - 0.5
-  scanlineFreq?: number;       // ~1.5 - 4.0
-  wobbleAmp?: number;          // 0.0 - 0.003
-  wobbleFreq?: number;         // 10 - 80
-  vignette?: number;           // 0.0 - 1.0
-  desaturate?: number;         // 0.0 - 1.0
-  gamma?: number;              // 0.8 - 1.2
-  maskStrength?: number;       // 0.0 - 0.1
+  curvature?: number; // 0.0 - 0.4
+  scanlineIntensity?: number; // 0.0 - 0.5
+  scanlineFreq?: number; // ~1.5 - 4.0
+  wobbleAmp?: number; // 0.0 - 0.003
+  wobbleFreq?: number; // 10 - 80
+  vignette?: number; // 0.0 - 1.0
+  desaturate?: number; // 0.0 - 1.0
+  gamma?: number; // 0.8 - 1.2
+  maskStrength?: number; // 0.0 - 0.1
 }
 
 export const DEFAULTS: Required<CRTPipelineOptions> = {
@@ -21,7 +21,7 @@ export const DEFAULTS: Required<CRTPipelineOptions> = {
   vignette: 0.25,
   desaturate: 0.08,
   gamma: 1.05,
-  maskStrength: 0.04
+  maskStrength: 0.04,
 };
 
 export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
@@ -37,7 +37,9 @@ export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
     return self.currentShader || self.shaders?.[0];
   }
 
-  private applyPendingOptions(shader?: Phaser.Renderer.WebGL.WebGLShader): void {
+  private applyPendingOptions(
+    shader?: Phaser.Renderer.WebGL.WebGLShader
+  ): void {
     if (!this._pendingOptions) return;
 
     const activeShader = shader ?? this.getActiveShader();
@@ -113,7 +115,7 @@ export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
 
         gl_FragColor = vec4(col, 1.0);
       }
-      `
+      `,
     });
   }
 

@@ -1,7 +1,9 @@
 import Phaser from "phaser";
 import { CRTPostFX, CRTPipelineOptions, DEFAULTS } from "./CRTPostFX";
 
-function isWebGL(scene: Phaser.Scene | null | undefined): scene is Phaser.Scene {
+function isWebGL(
+  scene: Phaser.Scene | null | undefined
+): scene is Phaser.Scene {
   if (!scene) return false;
 
   const renderer = scene.game.renderer as
@@ -24,7 +26,11 @@ function normalize(opts?: CRTPipelineOptions): Required<CRTPipelineOptions> {
 export class CRTPlugin extends Phaser.Plugins.ScenePlugin {
   private enabled = false;
 
-  constructor(scene: Phaser.Scene, pluginManager: Phaser.Plugins.PluginManager, pluginKey: string) {
+  constructor(
+    scene: Phaser.Scene,
+    pluginManager: Phaser.Plugins.PluginManager,
+    pluginKey: string
+  ) {
     super(scene, pluginManager, pluginKey);
   }
 
@@ -42,25 +48,36 @@ export class CRTPlugin extends Phaser.Plugins.ScenePlugin {
     // @ts-ignore private-ish registries differ by Phaser versions
     const reg = (scene.game.renderer as any)?.pipelines;
     const already =
-      reg?._postPipelineClasses?.[name] ||
-      reg?.postFX?.pipelines?.[name];
+      reg?._postPipelineClasses?.[name] || reg?.postFX?.pipelines?.[name];
 
     if (!already) {
       const renderer = scene.renderer;
       if (renderer && "pipelines" in renderer) {
-        (renderer as Phaser.Renderer.WebGL.WebGLRenderer).pipelines.addPostPipeline(name, CRTPostFX);
+        (
+          renderer as Phaser.Renderer.WebGL.WebGLRenderer
+        ).pipelines.addPostPipeline(name, CRTPostFX);
       }
     }
   }
 
-  private forEachCam(scene: Phaser.Scene, fn: (cam: Phaser.Cameras.Scene2D.Camera) => void) {
+  private forEachCam(
+    scene: Phaser.Scene,
+    fn: (cam: Phaser.Cameras.Scene2D.Camera) => void
+  ) {
     scene.cameras?.cameras.forEach(fn);
   }
 
-  private applyOptionsToCameras(scene: Phaser.Scene, opts: Required<CRTPipelineOptions>) {
+  private applyOptionsToCameras(
+    scene: Phaser.Scene,
+    opts: Required<CRTPipelineOptions>
+  ) {
     this.forEachCam(scene, (cam) => {
       const instances = cam.getPostPipeline("CRTPostFX") as unknown;
-      const arr = Array.isArray(instances) ? instances : instances ? [instances] : [];
+      const arr = Array.isArray(instances)
+        ? instances
+        : instances
+        ? [instances]
+        : [];
       (arr as CRTPostFX[]).forEach((p) => p.setOptions(opts));
     });
   }
@@ -85,7 +102,9 @@ export class CRTPlugin extends Phaser.Plugins.ScenePlugin {
     if (!isWebGL(scene)) return;
 
     this.forEachCam(scene, (cam) => {
-      try { cam.removePostPipeline("CRTPostFX"); } catch {}
+      try {
+        cam.removePostPipeline("CRTPostFX");
+      } catch {}
     });
     this.enabled = false;
   }
