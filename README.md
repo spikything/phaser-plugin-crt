@@ -1,9 +1,15 @@
 # phaser-plugin-crt
 
-A lightweight **CRT** post-processing effect for **Phaser 3** as a **Scene Plugin**.  
+A lightweight **CRT** post-processing effect for **Phaser 3** as a **Scene Plugin**.
 WebGL-only; safely no-ops on Canvas.
 
 ![Image](./demo/phaser-plugin-crt.jpg)
+
+## Installation
+
+```bash
+npm install phaser-plugin-crt
+```
 
 ## Usage
 
@@ -72,6 +78,8 @@ Open `demo/index.html` locally or serve the folder.
 npm i
 npm run build
 ```
+
+Run `npm test` to execute the minimal runtime smoke tests.
 
 ## License
 

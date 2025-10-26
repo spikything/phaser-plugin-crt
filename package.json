@@ -1,11 +1,12 @@
 {
   "name": "phaser-plugin-crt",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A lightweight CRT PostFX Scene Plugin for Phaser 3 (WebGL-only, Canvas-safe no-op).",
   "type": "module",
   "main": "dist/phaser-plugin-crt.umd.js",
   "module": "dist/phaser-plugin-crt.esm.js",
   "types": "dist/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "import": "./dist/phaser-plugin-crt.esm.js",
@@ -16,6 +17,14 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spikything/phaser-plugin-crt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/spikything/phaser-plugin-crt/issues"
+  },
+  "homepage": "https://github.com/spikything/phaser-plugin-crt#readme",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -43,5 +52,8 @@
     "webgl"
   ],
   "license": "MIT",
-  "author": "Spikything"
+  "author": "Spikything.com",
+  "publishConfig": {
+    "access": "public"
+  }
 }
