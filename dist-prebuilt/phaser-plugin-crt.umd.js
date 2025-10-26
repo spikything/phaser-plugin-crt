@@ -70,7 +70,10 @@
 
       float vignette(vec2 uv, float amt) {
         float d = distance(uv, vec2(0.5));
-        return smoothstep(0.9, amt, 1.0 - d);
+        float inner = 0.3;
+        float outer = 0.75;
+        float t = smoothstep(inner, outer, d);
+        return mix(1.0, 1.0 - amt, t);
       }
 
       void main() {
