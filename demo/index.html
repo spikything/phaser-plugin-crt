@@ -7,15 +7,32 @@
     <style>
       html, body { height: 100%; margin: 0; background:#111; color:#ddd; font-family: system-ui, sans-serif; }
       #game { width: 100%; height: 100%; }
-      .controls { position: fixed; top: 12px; left: 12px; background: rgba(0,0,0,0.6); padding: 10px 12px; border-radius: 10px; }
-      .controls button { margin-right: 8px; }
+      .controls {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        background: rgba(0,0,0,0.6);
+        padding: 10px 12px;
+        border-radius: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .preset-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+      .controls button { margin-right: 0; }
       a { color: #7dd3fc; }
     </style>
   </head>
   <body>
     <div class="controls">
       <button id="toggle">Toggle CRT (P)</button>
-      <button id="random">Randomize wobble</button>
+      <div class="preset-buttons">
+        <button data-preset="subtle">Subtle CRT</button>
+        <button data-preset="arcade">Arcade Glow</button>
+        <button data-preset="vhs">VHS Distortion</button>
+      </div>
+      <button id="randomise-all">Randomise All Settings</button>
       <span>— Powered by <a href="https://github.com/spikything/phaser-plugin-crt">phaser-plugin-crt</a></span>
     </div>
     <div id="game"></div>
@@ -26,6 +43,56 @@
     <script src="../dist-prebuilt/phaser-plugin-crt.umd.js"></script>
     <script>
       const { CRTPlugin } = PhaserPluginCRT;
+
+      const PRESETS = {
+        subtle: {
+          curvature: 0.12,
+          scanlineIntensity: 0.1,
+          scanlineFreq: 1.8,
+          wobbleAmp: 0.0004,
+          wobbleFreq: 28,
+          vignette: 0.35,
+          desaturate: 0.05,
+          gamma: 1.02,
+          maskStrength: 0.03
+        },
+        arcade: {
+          curvature: 0.2,
+          scanlineIntensity: 0.2,
+          scanlineFreq: 2.4,
+          wobbleAmp: 0.0009,
+          wobbleFreq: 44,
+          vignette: 0.5,
+          desaturate: 0.1,
+          gamma: 1.06,
+          maskStrength: 0.05
+        },
+        vhs: {
+          curvature: 0.28,
+          scanlineIntensity: 0.32,
+          scanlineFreq: 3.2,
+          wobbleAmp: 0.0016,
+          wobbleFreq: 62,
+          vignette: 0.6,
+          desaturate: 0.18,
+          gamma: 1.08,
+          maskStrength: 0.06
+        }
+      };
+
+      const RANDOM_RANGES = {
+        curvature: [0.05, 0.35],
+        scanlineIntensity: [0.05, 0.4],
+        scanlineFreq: [1.5, 3.8],
+        wobbleAmp: [0.0002, 0.0025],
+        wobbleFreq: [20, 70],
+        vignette: [0.25, 0.85],
+        desaturate: [0.02, 0.35],
+        gamma: [0.92, 1.12],
+        maskStrength: [0.02, 0.08]
+      };
+
+      const randomInRange = ([min, max]) => min + Math.random() * (max - min);
 
       class DemoScene extends Phaser.Scene {
         preload() {
@@ -41,17 +108,28 @@
           this.plugins.installScenePlugin('CRTPlugin', CRTPlugin, 'crt', this);
 
           // Enable with some defaults
-          this.crt.enable({
-            curvature: 0.18,
-            scanlineIntensity: 0.16,
-            wobbleAmp: 0.001
-          });
+          this.crt.enable(PRESETS.arcade);
 
           const key = this.input.keyboard.addKey('P');
           key.on('down', () => this.crt.toggle());
 
           document.getElementById('toggle').onclick = () => this.crt.toggle();
-          document.getElementById('random').onclick = () => this.crt.update({ wobbleAmp: Math.random() * 0.002 });
+
+          document.querySelectorAll('[data-preset]').forEach((button) => {
+            button.addEventListener('click', () => {
+              const preset = PRESETS[button.dataset.preset];
+              if (preset) {
+                this.crt.update(preset);
+              }
+            });
+          });
+
+          document.getElementById('randomise-all').onclick = () => {
+            const randomised = Object.fromEntries(
+              Object.entries(RANDOM_RANGES).map(([key, range]) => [key, randomInRange(range)])
+            );
+            this.crt.update(randomised);
+          };
         }
       }
 
