@@ -60,6 +60,10 @@ export class MyScene extends Phaser.Scene {
 - `gamma` (0.8–1.2)
 - `maskStrength` (0–0.1)
 
+## Demo
+
+Open `demo/index.html` locally or serve the folder.
+
 ## Build
 
 ```bash
