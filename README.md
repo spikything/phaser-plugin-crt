@@ -3,6 +3,8 @@
 A lightweight **CRT** post-processing effect for **Phaser 3** as a **Scene Plugin**.  
 WebGL-only; safely no-ops on Canvas.
 
+![Image](./demo/phaser-plugin-crt.jpg)
+
 ## Usage
 
 Register as a Scene Plugin (mapping `crt`):
