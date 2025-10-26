@@ -1,0 +1,8 @@
+{
+  "name": "tslib",
+  "version": "2.6.2",
+  "main": "./tslib.js",
+  "module": "./tslib.es6.js",
+  "types": "./tslib.d.ts",
+  "sideEffects": false
+}
