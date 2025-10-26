@@ -15,26 +15,51 @@
         padding: 10px 12px;
         border-radius: 10px;
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 220px;
+      }
+      .controls .buttons {
+        display: flex;
         gap: 8px;
       }
-      .preset-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
-      .controls button { margin-right: 0; }
+      .sliders {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 10px 12px;
+        border-radius: 10px;
+        display: grid;
+        gap: 8px;
+        width: 180px;
+      }
+      .slider-control {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .slider-control label {
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .slider-control input[type="range"] {
+        width: 100%;
+      }
       a { color: #7dd3fc; }
     </style>
   </head>
   <body>
     <div class="controls">
-      <button id="toggle">Toggle CRT (P)</button>
-      <div class="preset-buttons">
-        <button data-preset="subtle">Subtle CRT</button>
-        <button data-preset="arcade">Arcade Glow</button>
-        <button data-preset="vhs">VHS Distortion</button>
+      <div class="buttons">
+        <button id="disable">Disable</button>
+        <button id="randomise-all">Randomise</button>
       </div>
-      <button id="randomise-all">Randomise All Settings</button>
-      <span>— Powered by <a href="https://github.com/spikything/phaser-plugin-crt">phaser-plugin-crt</a></span>
+      <span><a href="https://github.com/spikything/phaser-plugin-crt">phaser-plugin-crt</a></span>
     </div>
+    <div class="sliders" id="sliders"></div>
     <div id="game"></div>
 
     <!-- Phaser CDN -->
@@ -108,27 +133,103 @@
           this.plugins.installScenePlugin('CRTPlugin', CRTPlugin, 'crt', this);
 
           // Enable with some defaults
-          this.crt.enable(PRESETS.arcade);
+          const currentSettings = { ...PRESETS.arcade };
+          this.crt.enable(currentSettings);
 
-          const key = this.input.keyboard.addKey('P');
-          key.on('down', () => this.crt.toggle());
+          let effectEnabled = true;
 
-          document.getElementById('toggle').onclick = () => this.crt.toggle();
+          const sliderSteps = {
+            curvature: 0.01,
+            scanlineIntensity: 0.01,
+            scanlineFreq: 0.1,
+            wobbleAmp: 0.0001,
+            wobbleFreq: 1,
+            vignette: 0.01,
+            desaturate: 0.01,
+            gamma: 0.01,
+            maskStrength: 0.005
+          };
 
-          document.querySelectorAll('[data-preset]').forEach((button) => {
-            button.addEventListener('click', () => {
-              const preset = PRESETS[button.dataset.preset];
-              if (preset) {
-                this.crt.update(preset);
+          const sliderContainer = document.getElementById('sliders');
+          const sliderRefs = {};
+
+          const formatLabel = (key) =>
+            key.replace(/([A-Z])/g, ' $1').replace(/^./, (ch) => ch.toUpperCase());
+
+          const formatValue = (key, value) => {
+            if (key === 'wobbleAmp') return value.toFixed(4);
+            if (key === 'wobbleFreq') return value.toFixed(0);
+            if (key === 'gamma') return value.toFixed(2);
+            return value.toFixed(2);
+          };
+
+          Object.entries(RANDOM_RANGES).forEach(([key, [min, max]]) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'slider-control';
+
+            const label = document.createElement('label');
+            label.htmlFor = `slider-${key}`;
+            const labelText = document.createElement('span');
+            labelText.textContent = formatLabel(key);
+            const valueDisplay = document.createElement('span');
+            valueDisplay.id = `slider-value-${key}`;
+            valueDisplay.textContent = formatValue(key, currentSettings[key]);
+            label.appendChild(labelText);
+            label.appendChild(valueDisplay);
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.id = `slider-${key}`;
+            slider.min = min;
+            slider.max = max;
+            slider.step = sliderSteps[key] ?? 0.01;
+            slider.value = currentSettings[key];
+
+            slider.addEventListener('input', () => {
+              const value = parseFloat(slider.value);
+              currentSettings[key] = value;
+              valueDisplay.textContent = formatValue(key, value);
+
+              if (!effectEnabled) {
+                this.crt.enable(currentSettings);
+                effectEnabled = true;
+              } else {
+                this.crt.update(currentSettings);
               }
             });
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(slider);
+            sliderContainer.appendChild(wrapper);
+            sliderRefs[key] = { slider, valueDisplay };
           });
+
+          document.getElementById('disable').onclick = () => {
+            this.crt.disable();
+            effectEnabled = false;
+          };
 
           document.getElementById('randomise-all').onclick = () => {
             const randomised = Object.fromEntries(
               Object.entries(RANDOM_RANGES).map(([key, range]) => [key, randomInRange(range)])
             );
-            this.crt.update(randomised);
+
+            Object.assign(currentSettings, randomised);
+
+            Object.entries(randomised).forEach(([key, value]) => {
+              const refs = sliderRefs[key];
+              if (refs) {
+                refs.slider.value = value;
+                refs.valueDisplay.textContent = formatValue(key, value);
+              }
+            });
+
+            if (!effectEnabled) {
+              this.crt.enable(currentSettings);
+              effectEnabled = true;
+            } else {
+              this.crt.update(randomised);
+            }
           };
         }
       }
