@@ -1,6 +1,6 @@
 {
   "name": "phaser-plugin-crt",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A lightweight CRT PostFX Scene Plugin for Phaser 3 (WebGL-only, Canvas-safe no-op).",
   "type": "module",
   "main": "dist/phaser-plugin-crt.umd.js",
