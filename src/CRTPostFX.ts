@@ -10,6 +10,7 @@ export interface CRTPipelineOptions {
   desaturate?: number; // 0.0 - 1.0
   gamma?: number; // 0.8 - 1.2
   maskStrength?: number; // 0.0 - 0.1
+  noise?: number; // 0.0 - 0.3
 }
 
 export const DEFAULTS: Required<CRTPipelineOptions> = {
@@ -22,6 +23,7 @@ export const DEFAULTS: Required<CRTPipelineOptions> = {
   desaturate: 0.08,
   gamma: 1.05,
   maskStrength: 0.04,
+  noise: 0.04,
 };
 
 export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
@@ -56,6 +58,7 @@ export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
     this.set1f("desaturateAmt", opts.desaturate, activeShader);
     this.set1f("gammaAmt", opts.gamma, activeShader);
     this.set1f("maskStrength", opts.maskStrength, activeShader);
+    this.set1f("noiseAmt", opts.noise, activeShader);
   }
 
   constructor(game: Phaser.Game) {
@@ -81,6 +84,7 @@ export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
       uniform float desaturateAmt;
       uniform float gammaAmt;
       uniform float maskStrength;
+      uniform float noiseAmt;
 
       vec2 barrel(vec2 uv, float amt) {
         vec2 cc = uv - 0.5;
@@ -96,11 +100,20 @@ export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
         return mix(1.0, 1.0 - amt, t);
       }
 
+      float random(vec2 co) {
+        return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453123);
+      }
+
       void main() {
         vec2 uv = outTexCoord;
 
         uv = barrel(uv, curvature);
         uv.x += sin((uv.y + time * 0.6) * wobbleFreq) * wobbleAmp;
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+          return;
+        }
 
         vec3 col = texture2D(uMainSampler, uv).rgb;
 
@@ -115,6 +128,13 @@ export class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
         float gray = dot(col, vec3(0.299, 0.587, 0.114));
         col = mix(col, vec3(gray), desaturateAmt);
         col = pow(col, vec3(gammaAmt));
+
+        float frameSeed = floor(time * 120.0);
+        float grain = random(gl_FragCoord.xy + vec2(frameSeed, frameSeed * 1.37));
+        float coarse = step(0.5, grain);
+        float staticValue = mix(grain, coarse, 0.6);
+        float noiseStrength = clamp(noiseAmt * 3.5, 0.0, 1.0);
+        col = mix(col, vec3(staticValue), noiseStrength);
 
         gl_FragColor = vec4(col, 1.0);
       }

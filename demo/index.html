@@ -79,7 +79,8 @@
           vignette: 0.35,
           desaturate: 0.05,
           gamma: 1.02,
-          maskStrength: 0.03
+          maskStrength: 0.03,
+          noise: 0.03
         },
         arcade: {
           curvature: 0.2,
@@ -90,7 +91,8 @@
           vignette: 0.5,
           desaturate: 0.1,
           gamma: 1.06,
-          maskStrength: 0.05
+          maskStrength: 0.05,
+          noise: 0.05
         },
         vhs: {
           curvature: 0.28,
@@ -101,7 +103,8 @@
           vignette: 0.6,
           desaturate: 0.18,
           gamma: 1.08,
-          maskStrength: 0.06
+          maskStrength: 0.06,
+          noise: 0.08
         }
       };
 
@@ -114,7 +117,8 @@
         vignette: [0.25, 0.85],
         desaturate: [0.02, 0.35],
         gamma: [0.92, 1.12],
-        maskStrength: [0.02, 0.08]
+        maskStrength: [0.02, 0.08],
+        noise: [0, 0.2]
       };
 
       const randomInRange = ([min, max]) => min + Math.random() * (max - min);
@@ -125,7 +129,9 @@
           this.load.image('bg', 'https://labs.phaser.io/assets/skies/deepblue.png');
         }
         create() {
-          this.add.image(400, 300, 'bg').setScale(0.8);
+          this.add
+            .image(400, 300, 'bg')
+            .setDisplaySize(this.scale.width, this.scale.height);
           const logo = this.add.image(400, 300, 'logo');
           this.tweens.add({ targets: logo, angle: 360, duration: 8000, repeat: -1 });
 
@@ -147,7 +153,8 @@
             vignette: 0.01,
             desaturate: 0.01,
             gamma: 0.01,
-            maskStrength: 0.005
+            maskStrength: 0.005,
+            noise: 0.01
           };
 
           const sliderContainer = document.getElementById('sliders');

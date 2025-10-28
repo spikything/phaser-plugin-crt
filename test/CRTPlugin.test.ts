@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { beforeEach, describe, it } from "node:test";
 import Module from "node:module";
 import path from "node:path";
@@ -13,6 +14,7 @@ const TEST_DEFAULTS = {
   desaturate: 0.08,
   gamma: 1.05,
   maskStrength: 0.04,
+  noise: 0.04,
 } as const;
 
 type Spy = ((...args: any[]) => any) & {
@@ -87,6 +89,10 @@ const phaserModuleExports = Object.assign({ default: phaserObject }, phaserObjec
 
 const CRT_PLUGIN_PATH = path.resolve(__dirname, "../src/CRTPlugin.js");
 const CRT_POST_FX_PATH = path.resolve(__dirname, "../src/CRTPostFX.js");
+const PREBUILT_UMD_PATH = path.resolve(
+  __dirname,
+  "../../dist-prebuilt/phaser-plugin-crt.umd.js"
+);
 
 function loadCRTPlugin(): typeof import("../src/CRTPlugin").CRTPlugin {
   const ModuleCtor = (Module as unknown as { Module: any }).Module;
@@ -243,6 +249,25 @@ describe("CRTPlugin", () => {
     });
   });
 
+  it("applies updated noise values to active pipelines", () => {
+    const CRTPlugin = loadCRTPlugin();
+    const { scene } = createScene();
+    const plugin = new CRTPlugin(scene as any, {} as any, "crt");
+
+    plugin.enable();
+    const instance = StubCRTPostFX.instances[0];
+    const setOptionsSpy = instance.setOptions as Spy;
+    setOptionsSpy.reset();
+
+    plugin.update({ noise: 0.2 });
+
+    assert.equal(setOptionsSpy.callCount(), 1);
+    assert.deepEqual(setOptionsSpy.calls[0][0], {
+      ...TEST_DEFAULTS,
+      noise: 0.2,
+    });
+  });
+
   it("is a no-op when the renderer is not WebGL", () => {
     const CRTPlugin = loadCRTPlugin();
     const { scene, camera, pipelines } = createScene(false);
@@ -258,5 +283,16 @@ describe("CRTPlugin", () => {
 
     plugin.disable();
     assert.equal(camera.removePostPipeline.callCount(), 0);
+  });
+});
+
+describe("dist-prebuilt", () => {
+  it("includes the noise uniform so the demo slider works", () => {
+    const bundle = readFileSync(PREBUILT_UMD_PATH, "utf8");
+    assert.strictEqual(
+      bundle.includes("noiseAmt"),
+      true,
+      "Expected prebuilt bundle to expose noise uniform"
+    );
   });
 });

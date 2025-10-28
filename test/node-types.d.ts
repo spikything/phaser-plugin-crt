@@ -30,6 +30,13 @@ declare module "node:path" {
   export default path;
 }
 
+declare module "node:fs" {
+  export function readFileSync(
+    path: string,
+    options: { encoding: "utf8" } | "utf8"
+  ): string;
+}
+
 declare interface NodeRequire {
   (id: string): any;
   cache: Record<string, { exports: any }>;

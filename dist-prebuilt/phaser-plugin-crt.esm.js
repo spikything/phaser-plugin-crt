@@ -9,7 +9,8 @@ const DEFAULTS = {
     vignette: 0.25,
     desaturate: 0.08,
     gamma: 1.05,
-    maskStrength: 0.04
+    maskStrength: 0.04,
+    noise: 0.04,
 };
 class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
     getActiveShader() {
@@ -33,6 +34,7 @@ class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
         this.set1f("desaturateAmt", opts.desaturate, activeShader);
         this.set1f("gammaAmt", opts.gamma, activeShader);
         this.set1f("maskStrength", opts.maskStrength, activeShader);
+        this.set1f("noiseAmt", opts.noise, activeShader);
     }
     constructor(game) {
         super({
@@ -57,6 +59,7 @@ class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
       uniform float desaturateAmt;
       uniform float gammaAmt;
       uniform float maskStrength;
+      uniform float noiseAmt;
 
       vec2 barrel(vec2 uv, float amt) {
         vec2 cc = uv - 0.5;
@@ -66,7 +69,14 @@ class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
 
       float vignette(vec2 uv, float amt) {
         float d = distance(uv, vec2(0.5));
-        return smoothstep(0.9, amt, 1.0 - d);
+        float inner = 0.3;
+        float outer = 0.75;
+        float t = smoothstep(inner, outer, d);
+        return mix(1.0, 1.0 - amt, t);
+      }
+
+      float random(vec2 co) {
+        return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453123);
       }
 
       void main() {
@@ -74,6 +84,11 @@ class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
 
         uv = barrel(uv, curvature);
         uv.x += sin((uv.y + time * 0.6) * wobbleFreq) * wobbleAmp;
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+          return;
+        }
 
         vec3 col = texture2D(uMainSampler, uv).rgb;
 
@@ -89,9 +104,16 @@ class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
         col = mix(col, vec3(gray), desaturateAmt);
         col = pow(col, vec3(gammaAmt));
 
+        float frameSeed = floor(time * 120.0);
+        float grain = random(gl_FragCoord.xy + vec2(frameSeed, frameSeed * 1.37));
+        float coarse = step(0.5, grain);
+        float staticValue = mix(grain, coarse, 0.6);
+        float noiseStrength = clamp(noiseAmt * 3.5, 0.0, 1.0);
+        col = mix(col, vec3(staticValue), noiseStrength);
+
         gl_FragColor = vec4(col, 1.0);
       }
-      `
+      `,
         });
         this._time = 0;
     }
@@ -145,8 +167,7 @@ class CRTPlugin extends Phaser.Plugins.ScenePlugin {
         const name = "CRTPostFX";
         // @ts-ignore private-ish registries differ by Phaser versions
         const reg = (_a = scene.game.renderer) === null || _a === void 0 ? void 0 : _a.pipelines;
-        const already = ((_b = reg === null || reg === void 0 ? void 0 : reg._postPipelineClasses) === null || _b === void 0 ? void 0 : _b[name]) ||
-            ((_d = (_c = reg === null || reg === void 0 ? void 0 : reg.postFX) === null || _c === void 0 ? void 0 : _c.pipelines) === null || _d === void 0 ? void 0 : _d[name]);
+        const already = ((_b = reg === null || reg === void 0 ? void 0 : reg._postPipelineClasses) === null || _b === void 0 ? void 0 : _b[name]) || ((_d = (_c = reg === null || reg === void 0 ? void 0 : reg.postFX) === null || _c === void 0 ? void 0 : _c.pipelines) === null || _d === void 0 ? void 0 : _d[name]);
         if (!already) {
             const renderer = scene.renderer;
             if (renderer && "pipelines" in renderer) {
@@ -161,7 +182,11 @@ class CRTPlugin extends Phaser.Plugins.ScenePlugin {
     applyOptionsToCameras(scene, opts) {
         this.forEachCam(scene, (cam) => {
             const instances = cam.getPostPipeline("CRTPostFX");
-            const arr = Array.isArray(instances) ? instances : instances ? [instances] : [];
+            const arr = Array.isArray(instances)
+                ? instances
+                : instances
+                    ? [instances]
+                    : [];
             arr.forEach((p) => p.setOptions(opts));
         });
     }

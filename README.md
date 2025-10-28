@@ -3,7 +3,7 @@
 A lightweight **CRT** post-processing effect for **Phaser 3** as a **Scene Plugin**.
 WebGL-only; safely no-ops on Canvas.
 
-![Image](./demo/phaser-plugin-crt.jpg)
+![Image](./demo/phaser-plugin-crt.gif)
 
 ## Installation
 
@@ -13,7 +13,7 @@ npm install phaser-plugin-crt
 
 ## Usage
 
-Register as a Scene Plugin (mapping `crt`):
+Import and register as a Scene Plugin:
 
 ```ts
 import Phaser from "phaser";
@@ -30,7 +30,7 @@ const config: Phaser.Types.Core.GameConfig = {
 new Phaser.Game(config);
 ```
 
-In your scene:
+In your scene, simply call crt.enable with your options:
 
 ```ts
 export class MyScene extends Phaser.Scene {
@@ -52,6 +52,9 @@ export class MyScene extends Phaser.Scene {
       loop: true,
       callback: () => this.crt.update({ wobbleAmp: Math.random() * 0.002 }),
     });
+
+    // Disable for all cameras
+    this.crt.disable();
   }
 }
 ```
@@ -67,6 +70,7 @@ export class MyScene extends Phaser.Scene {
 - `desaturate` (0–1)
 - `gamma` (0.8–1.2)
 - `maskStrength` (0–0.1)
+- `noise` (0–0.3)
 
 ## Demo
 
@@ -83,4 +87,4 @@ Run `npm test` to execute the minimal runtime smoke tests.
 
 ## License
 
-MIT © Spikything
+MIT © Spikything.com
