@@ -14,7 +14,7 @@
         desaturate: 0.08,
         gamma: 1.05,
         maskStrength: 0.04,
-        noise: 0.04,
+        noise: 0.0,
     };
     class CRTPostFX extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
         getActiveShader() {
