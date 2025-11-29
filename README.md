@@ -1,7 +1,6 @@
 # phaser-plugin-crt
 
-A lightweight **CRT** post-processing effect for **Phaser 3** as a **Scene Plugin**.
-WebGL-only; safely no-ops on Canvas.
+A lightweight **CRT** post-processing effect for **Phaser 3** as a **Scene Plugin**. WebGL-only; safely no-ops on Canvas. You can see the plugin in action in the game [Exovore](https://spikything.com/games/exovore/){:target="_blank"}.
 
 ![Image](./demo/phaser-plugin-crt.gif)
 
